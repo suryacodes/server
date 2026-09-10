@@ -1,0 +1,159 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RoleScope {
+  COMPANY
+  STORE
+}
+
+model User {
+  id          String  @id @default(uuid(7)) @db.Uuid
+  name        String
+  email       String  @unique
+  phoneCode   String? @map("phone_code")
+  phoneNumber String? @map("phone_number")
+  password    String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  isDeleted Boolean  @default(false) @map("is_deleted")
+
+  companies     CompanyUser[]
+  stores        StoreUser[]
+  refreshTokens RefreshToken[]
+
+  @@index([phoneCode, phoneNumber])
+  @@map("users")
+}
+
+model Company {
+  id       String @id @default(uuid(7)) @db.Uuid
+  name     String
+  timezone String @default("UTC")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  isDeleted Boolean  @default(false) @map("is_deleted")
+
+  users  CompanyUser[]
+  roles  Role[]
+  stores Store[]
+
+  @@map("companies")
+}
+
+model CompanyUser {
+  companyId String @map("company_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+  roleId    BigInt @map("role_id")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role    Role    @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([companyId, userId])
+  @@index([userId])
+  @@index([companyId, roleId])
+  @@map("company_users")
+}
+
+model Store {
+  id        String @id @default(uuid(7)) @db.Uuid
+  companyId String @map("company_id") @db.Uuid
+  name      String
+
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users   StoreUser[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@map("stores")
+}
+
+model StoreUser {
+  storeId String @map("store_id") @db.Uuid
+  userId  String @map("user_id") @db.Uuid
+  roleId  BigInt @map("role_id")
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role  Role  @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([storeId, userId])
+  @@index([userId])
+  @@index([storeId, roleId])
+  @@map("store_users")
+}
+
+model Role {
+  id          BigInt    @id @default(autoincrement())
+  name        String
+  description String
+  companyId   String?   @map("company_id") @db.Uuid
+  scope       RoleScope
+
+  isDeleted Boolean @default(false) @map("is_deleted")
+
+  company      Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  permissions  RolePermission[]
+  companyUsers CompanyUser[]
+  storeUsers   StoreUser[]
+
+  @@index([companyId, scope, name])
+  @@map("roles")
+}
+
+model Permission {
+  id          BigInt  @id @default(autoincrement())
+  name        String  @unique
+  description String
+  isDeleted   Boolean @default(false) @map("is_deleted")
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       BigInt @map("role_id")
+  permissionId BigInt @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model RefreshToken {
+  jti    String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
