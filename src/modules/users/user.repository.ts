@@ -49,6 +49,12 @@ export const userRepo = {
         phoneCode: true,
         phoneNumber: true,
         password: true,
+        companies: {
+          select: {
+            companyId: true,
+            roleId: true,
+          },
+        },
       },
     });
   },

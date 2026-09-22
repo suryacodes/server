@@ -3,6 +3,8 @@ declare global {
     interface Request {
       userId: string;
       refreshTokenJti: string;
+      tenantId: string;
+      roleId: string;
     }
   }
 }

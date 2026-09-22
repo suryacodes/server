@@ -46,9 +46,12 @@ model Company {
   updatedAt DateTime @updatedAt @map("updated_at")
   isDeleted Boolean  @default(false) @map("is_deleted")
 
-  users  CompanyUser[]
-  roles  Role[]
-  stores Store[]
+  users       CompanyUser[]
+  roles       Role[]
+  stores      Store[]
+  products    Product[]
+  prices      Price[]
+  inventories Inventory[]
 
   @@map("companies")
 }
@@ -77,8 +80,10 @@ model Store {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  company Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  users   StoreUser[]
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users       StoreUser[]
+  prices      Price[]
+  inventories Inventory[]
 
   @@unique([companyId, name])
   @@index([companyId])
@@ -156,4 +161,72 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+enum UnitOfMeasure {
+  PCS
+  KG
+  G
+  L
+  ML
+  BOX
+}
+
+model Product {
+  id          String  @id @default(uuid(7)) @db.Uuid
+  companyId   String  @map("company_id") @db.Uuid
+  sku         String
+  name        String
+  description String?
+  imageUrl    String? @map("image_url")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  prices      Price[]
+  inventories Inventory[]
+
+  @@unique([companyId, sku])
+  @@index([companyId, name])
+  @@map("products")
+}
+
+model Price {
+  id        BigInt  @id @default(autoincrement())
+  productId String  @map("product_id") @db.Uuid
+  companyId String  @map("company_id") @db.Uuid
+  storeId   String  @map("store_id") @db.Uuid
+  price     Decimal @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, storeId, productId])
+  @@map("prices")
+}
+
+model Inventory {
+  id        BigInt @id @default(autoincrement())
+  productId String @map("product_id") @db.Uuid
+  companyId String @map("company_id") @db.Uuid
+  storeId   String @map("store_id") @db.Uuid
+
+  qty         Decimal       @db.Decimal(12, 3)
+  uom         UnitOfMeasure
+  reservedQty Decimal       @map("reserved_qty") @db.Decimal(12, 3)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, storeId, productId])
+  @@map("inventory")
 }

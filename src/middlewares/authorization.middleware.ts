@@ -15,13 +15,14 @@ export const verifyTokenMiddleware = (
 
   const token = authorizationHeader.split(" ")[1];
 
-  const sub = verifyAccessToken(token);
-
-  if (!sub) {
+  const payload = verifyAccessToken(token);
+  if (!payload.sub) {
     return next(new CustomError(401, "Invalid access token"));
   }
 
-  req.userId = sub;
+  req.userId = payload.sub;
+  req.tenantId = payload.tenantId;
+  req.roleId = payload.roleId;
 
   next();
 };

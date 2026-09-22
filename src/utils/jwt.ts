@@ -2,14 +2,25 @@ import { env } from "@/config/env";
 import jwt from "jsonwebtoken";
 import { CustomError } from "./customErrors";
 
-export const generateAccessToken = (userId: string) => {
-  return jwt.sign({}, env.ACCESS_TOKEN_SECRET_KEY, {
-    subject: userId,
-    expiresIn: "15m",
-  });
+export const generateAccessToken = (
+  userId: string,
+  companyId: string,
+  roleId: string,
+) => {
+  return jwt.sign(
+    {
+      tenantId: companyId,
+      roleId,
+    },
+    env.ACCESS_TOKEN_SECRET_KEY,
+    {
+      subject: userId,
+      expiresIn: "15m",
+    },
+  );
 };
 
-export const verifyAccessToken = (token: string): string => {
+export const verifyAccessToken = (token: string) => {
   try {
     const decoded = jwt.verify(token, env.ACCESS_TOKEN_SECRET_KEY);
 
@@ -17,7 +28,7 @@ export const verifyAccessToken = (token: string): string => {
       throw new CustomError(401, "Invalid access token");
     }
 
-    return decoded.sub;
+    return decoded;
   } catch (err) {
     if (err instanceof CustomError) {
       throw err;

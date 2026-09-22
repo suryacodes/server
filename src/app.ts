@@ -4,12 +4,15 @@ import cookieParser from "cookie-parser";
 import router from "./routes";
 import { errorMiddleware } from "./middlewares";
 import { setupSwagger } from "./swagger";
+import { connectRedis } from "@/db/redis";
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 setupSwagger(app);
+
+connectRedis();
 
 app.use(
   cors({

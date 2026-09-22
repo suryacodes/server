@@ -20,16 +20,33 @@ export const authService = {
       throw new Error("Invalid credentials");
     }
 
+    const membership = user.companies?.[0];
+
+    if (!membership) {
+      throw new CustomError(401, "User has no company membership");
+    }
+
+    const { companyId, roleId } = membership;
+
     const jti = uuidv7();
     const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL);
 
-    const accessToken = generateAccessToken(user.id);
+    const accessToken = generateAccessToken(
+      user.id,
+      companyId,
+      roleId.toString(),
+    );
+
     const refreshToken = generateRefreshToken(user.id, jti, expiresAt);
     await authRepository.createRefreshToken(jti, user.id, expiresAt);
 
-    const { password, ...safeUser } = user;
+    const { password, companies, ...safeUser } = user;
 
-    return { refreshToken, accessToken, user: safeUser };
+    return {
+      accessToken,
+      refreshToken,
+      user: safeUser,
+    };
   },
 
   async rotateRefreshToken(jti: string, userId: string) {
