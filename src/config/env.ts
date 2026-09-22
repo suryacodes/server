@@ -7,4 +7,5 @@ export const env = {
   ACCESS_TOKEN_SECRET_KEY: process.env.ACCESS_TOKEN_SECRET_KEY!,
   REFRESH_TOKEN_SECRET_KEY: process.env.REFRESH_TOKEN_SECRET_KEY!,
   API_URL: process.env.API_URL || "http://localhost:3000",
+  CURSOR_SECRET: process.env.CURSOR_SECRET,
 };

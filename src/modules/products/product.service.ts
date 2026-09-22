@@ -1,3 +1,4 @@
+import { encodeCursor } from "@/utils/cursor";
 import productRepository from "./product.repository";
 import { CustomError } from "@/utils/customErrors";
 
@@ -14,6 +15,25 @@ const productService = {
     }
 
     return product;
+  },
+
+  async getProducts(
+    companyId: string,
+    storeId: string,
+    limit: number,
+    cursor?: string,
+  ) {
+    const products = await productRepository.findProducts(
+      companyId,
+      storeId,
+      limit,
+      cursor,
+    );
+    const nextCursor =
+      products.length === limit
+        ? encodeCursor(products[products.length - 1].id)
+        : null;
+    return { products, nextCursor };
   },
 };
 
