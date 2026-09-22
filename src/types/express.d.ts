@@ -4,7 +4,7 @@ declare global {
       userId: string;
       refreshTokenJti: string;
       tenantId: string;
-      roleId: string;
+      roleId: number;
     }
   }
 }

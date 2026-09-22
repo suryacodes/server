@@ -73,4 +73,17 @@ export const authService = {
 
     return { refreshToken, accessToken };
   },
+
+  async isAllowed(roleId: number, permissions: string[]) {
+    const isAllowed = await authRepository.hasAllPermissions(
+      roleId,
+      permissions,
+    );
+
+    if (!isAllowed) {
+      throw new CustomError(403, "Not Allowed To Perform This Operation");
+    }
+
+    return true;
+  },
 };

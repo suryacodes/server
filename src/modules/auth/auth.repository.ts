@@ -84,4 +84,26 @@ export const authRepository = {
       };
     });
   },
+
+  async hasAllPermissions(roleId: number, permissions: string[]) {
+    const required = new Set(permissions);
+
+    if (required.size === 0) {
+      return true;
+    }
+
+    const count = await prisma.rolePermission.count({
+      where: {
+        roleId,
+        permission: {
+          isDeleted: false,
+          name: {
+            in: [...required],
+          },
+        },
+      },
+    });
+
+    return count === required.size;
+  },
 };
